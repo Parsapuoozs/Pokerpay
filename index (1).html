@@ -1,0 +1,791 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>برداشت وجه</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --bg: #0a0e1a;
+    --surface: #121826;
+    --surface-2: #1a2233;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #f0f4ff;
+    --text-dim: #6b7591;
+    --green: #00d97e;
+    --green-glow: rgba(0, 217, 126, 0.35);
+    --gold: #f5b942;
+  }
+  
+  html, body {
+    height: 100%;
+    font-family: 'Vazirmatn', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+  
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+  
+  /* Ambient background glow */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,217,126,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -20%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(245,185,66,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .card {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(180deg, #141b2b 0%, #0f1523 100%);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 400px;
+    border-radius: 28px;
+    padding: 28px 24px;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 26px;
+  }
+  
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .brand-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1a2233, #0f1523);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+  }
+  
+  .brand-name {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  
+  .brand-name span { color: var(--green); }
+  
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+    padding: 6px 10px;
+    background: rgba(0,217,126,0.06);
+    border: 1px solid rgba(0,217,126,0.15);
+    border-radius: 20px;
+  }
+  
+  .status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  
+  /* Balance */
+  .balance {
+    background: linear-gradient(135deg, rgba(0,217,126,0.08), rgba(0,217,126,0.02));
+    border: 1px solid rgba(0,217,126,0.15);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .balance::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(0,217,126,0.06), transparent 30%);
+    animation: rotate 8s linear infinite;
+  }
+  
+  @keyframes rotate {
+    to { transform: rotate(360deg); }
+  }
+  
+  .balance-inner { position: relative; z-index: 1; }
+  
+  .balance-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .balance-label::before {
+    content: '💰';
+    font-size: 12px;
+  }
+  
+  .balance-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--green);
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  
+  .balance-value .currency {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  
+  /* Hidden admin trigger */
+  #adminTrigger {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 44px;
+    height: 44px;
+    cursor: default;
+    z-index: 10;
+    background: transparent;
+    border: none;
+    opacity: 0;
+  }
+  
+  /* Admin panel */
+  .admin-panel {
+    display: none;
+    background: rgba(245,185,66,0.05);
+    border: 1px solid rgba(245,185,66,0.2);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .admin-panel.show { display: block; }
+  
+  .admin-panel label {
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .admin-row {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .admin-panel input {
+    flex: 1;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(245,185,66,0.25);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    text-align: center;
+  }
+  
+  .admin-panel input:focus { border-color: var(--gold); }
+  
+  .admin-panel button {
+    padding: 10px 16px;
+    background: var(--gold);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-weight: 700;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .admin-panel button:hover { opacity: 0.85; }
+  
+  /* Steps */
+  .step { display: none; }
+  .step.active { display: block; animation: fadeIn 0.4s ease; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Progress */
+  .progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  .progress-bar.active {
+    background: linear-gradient(90deg, var(--green), rgba(0,217,126,0.5));
+    box-shadow: 0 0 10px var(--green-glow);
+  }
+  
+  /* Field */
+  .field-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-bottom: 10px;
+    display: block;
+    letter-spacing: 0.3px;
+  }
+  
+  .field {
+    position: relative;
+    margin-bottom: 4px;
+  }
+  
+  .field input {
+    width: 100%;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.25s;
+    text-align: center;
+    letter-spacing: 1.5px;
+  }
+  
+  .field input::placeholder {
+    color: #4a5370;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+  
+  .field input:focus {
+    border-color: var(--green);
+    background: rgba(0,217,126,0.03);
+    box-shadow: 0 0 0 4px rgba(0,217,126,0.08);
+  }
+  
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type=number] { -moz-appearance: textfield; }
+  
+  /* Button */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    margin-top: 18px;
+    background: linear-gradient(135deg, #00d97e, #00b869);
+    color: #001a0e;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    box-shadow: 0 8px 24px rgba(0,217,126,0.25), inset 0 1px 0 rgba(255,255,255,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+  
+  .btn:hover::before { transform: translateX(100%); }
+  
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(0,217,126,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  
+  .btn:active { transform: translateY(0); }
+  
+  /* Info card */
+  .info-box {
+    background: rgba(0,217,126,0.06);
+    border: 1px solid rgba(0,217,126,0.15);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.4s ease;
+  }
+  
+  .info-box .icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #001a0e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 0 20px var(--green-glow);
+  }
+  
+  .info-box .text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a8f5cd;
+  }
+  
+  /* Summary rows */
+  .summary {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px 16px;
+    margin-bottom: 4px;
+  }
+  
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  
+  .row:last-child { border-bottom: none; }
+  .row .k { color: var(--text-dim); font-weight: 500; }
+  .row .v { color: var(--text); font-weight: 700; }
+  .row .v.green { color: var(--green); }
+  
+  /* Loading */
+  .loading-wrap {
+    padding: 40px 0;
+    text-align: center;
+  }
+  
+  .spinner {
+    width: 52px;
+    height: 52px;
+    border: 3px solid rgba(255,255,255,0.06);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    margin: 0 auto 18px;
+    animation: spin 0.9s linear infinite;
+    box-shadow: 0 0 30px var(--green-glow);
+  }
+  
+  @keyframes spin { to { transform: rotate(360deg); } }
+  
+  .loading-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  
+  /* Success */
+  .success-wrap { text-align: center; padding: 8px 0; }
+  
+  .success-icon {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), #00b869);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 22px;
+    font-size: 42px;
+    color: #001a0e;
+    box-shadow: 0 0 50px var(--green-glow), inset 0 2px 8px rgba(255,255,255,0.3);
+    animation: successPop 0.7s cubic-bezier(0.16, 1.2, 0.3, 1);
+    position: relative;
+  }
+  
+  .success-icon::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px solid var(--green);
+    opacity: 0;
+    animation: ripple 1.8s ease-out;
+  }
+  
+  @keyframes ripple {
+    0% { opacity: 0.6; transform: scale(0.9); }
+    100% { opacity: 0; transform: scale(1.6); }
+  }
+  
+  @keyframes successPop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  
+  .success-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  
+  .success-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    font-weight: 500;
+  }
+  
+  .success-amount {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+  
+  .success-amount small {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-right: 6px;
+  }
+  
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 22px 0;
+  }
+  
+  .footnote {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 14px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+  
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <button id="adminTrigger" title=""></button>
+  
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">♠️</div>
+      <div class="brand-name">POKER<span>PAY</span></div>
+    </div>
+    <div class="status">آنلاین</div>
+  </div>
+  
+  <!-- Admin panel (hidden) -->
+  <div class="admin-panel" id="adminPanel">
+    <label>⚙️ پنل مدیریت -- تنظیم موجودی</label>
+    <div class="admin-row">
+      <input type="number" id="adminBalance" placeholder="مبلغ به تومان">
+      <button onclick="setBalance()">ثبت</button>
+    </div>
+  </div>
+  
+  <!-- Progress -->
+  <div class="progress">
+    <div class="progress-bar active" id="pb1"></div>
+    <div class="progress-bar" id="pb2"></div>
+    <div class="progress-bar" id="pb3"></div>
+  </div>
+  
+  <!-- STEP 1 -->
+  <div class="step active" id="step1">
+    <div class="balance">
+      <div class="balance-inner">
+        <div class="balance-label">موجودی قابل برداشت</div>
+        <div class="balance-value">
+          <span id="balanceText">۱۲,۴۵۰,۰۰۰</span>
+          <span class="currency">تومان</span>
+        </div>
+      </div>
+    </div>
+    
+    <label class="field-label">آیدی بازیکن</label>
+    <div class="field">
+      <input type="number" id="playerId" placeholder="آیدی خود را وارد کنید" inputmode="numeric">
+    </div>
+    <button class="btn" onclick="checkId()">تایید آیدی</button>
+  </div>
+  
+  <!-- STEP 2 -->
+  <div class="step" id="step2">
+    <div class="info-box">
+      <div class="icon">✓</div>
+      <div class="text">آیدی شما با موفقیت شناسایی شد</div>
+    </div>
+    
+    <label class="field-label">شماره کارت بانکی</label>
+    <div class="field">
+      <input type="text" id="cardNum" placeholder="-- -- -- --  -- -- -- --  -- -- -- --" maxlength="19" inputmode="numeric">
+    </div>
+    <button class="btn" onclick="checkCard()">تایید شماره کارت</button>
+  </div>
+  
+  <!-- STEP 3 -->
+  <div class="step" id="step3">
+    <div class="summary">
+      <div class="row"><span class="k">آیدی بازیکن</span><span class="v" id="dispId">--</span></div>
+      <div class="row"><span class="k">شماره کارت</span><span class="v" id="dispCard">--</span></div>
+      <div class="row"><span class="k">صاحب حساب</span><span class="v">پارسا باقرزاد سعید</span></div>
+      <div class="row"><span class="k">مبلغ قابل واریز</span><span class="v green" id="dispAmount">--</span></div>
+    </div>
+    <button class="btn" onclick="confirmWithdraw()">تایید نهایی و برداشت</button>
+  </div>
+  
+  <!-- STEP 4 -->
+  <div class="step" id="step4">
+    <div class="success-wrap">
+      <div class="success-icon">✓</div>
+      <div class="success-title">برداشت موفق</div>
+      <div class="success-sub">مبلغ با موفقیت به حساب شما واریز شد</div>
+      <div class="success-amount"><span id="finalAmount">--</span><small>تومان</small></div>
+    </div>
+    <div class="divider"></div>
+    <div class="summary">
+      <div class="row"><span class="k">به کارت</span><span class="v" id="finalCard">--</span></div>
+      <div class="row"><span class="k">زمان تراکنش</span><span class="v" id="finalTime">--</span></div>
+      <div class="row"><span class="k">وضعیت</span><span class="v green">تکمیل شده</span></div>
+    </div>
+    <div class="footnote">رسید تراکنش پیامک شد</div>
+  </div>
+  
+  <!-- STEP LOADING -->
+  <div class="step" id="stepLoading">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-text">در حال پردازش تراکنش...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const state = {
+    id: '',
+    card: '',
+    balance: 12450000
+  };
+  
+  // ===== Hidden Admin Trigger =====
+  // 3 taps on the top-left corner (invisible button)
+  let tapCount = 0;
+  let tapTimer = null;
+  const trigger = document.getElementById('adminTrigger');
+  
+  trigger.addEventListener('click', () => {
+    tapCount++;
+    clearTimeout(tapTimer);
+    if (tapCount >= 3) {
+      tapCount = 0;
+      document.getElementById('adminPanel').classList.toggle('show');
+      document.getElementById('adminBalance').focus();
+    } else {
+      tapTimer = setTimeout(() => { tapCount = 0; }, 700);
+    }
+  });
+  
+  function setBalance() {
+    const val = parseInt(document.getElementById('adminBalance').value);
+    if (!val || val < 0) { alert('مبلغ معتبر وارد کنید'); return; }
+    state.balance = val;
+    renderBalance();
+    document.getElementById('adminPanel').classList.remove('show');
+    document.getElementById('adminBalance').value = '';
+  }
+  
+  function toFa(n) {
+    return n.toLocaleString('en-US').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  }
+  
+  function renderBalance() {
+    document.getElementById('balanceText').textContent = toFa(state.balance);
+  }
+  
+  // ===== Steps =====
+  function show(stepId) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(stepId).classList.add('active');
+  }
+  
+  function setProgress(n) {
+    [1,2,3].forEach(i => {
+      document.getElementById('pb'+i).classList.toggle('active', i <= n);
+    });
+  }
+  
+  function formatCard(v) {
+    v = v.replace(/\D/g, '').slice(0, 16);
+    return v.replace(/(.{4})/g, '$1 ').trim();
+  }
+  
+  function checkId() {
+    const val = document.getElementById('playerId').value.trim();
+    if (val.length < 4) { shakeInput('playerId'); return; }
+    state.id = val;
+    setProgress(2);
+    show('step2');
+  }
+  
+  function checkCard() {
+    const raw = document.getElementById('cardNum').value.replace(/\D/g, '');
+    if (raw.length !== 16) { shakeInput('cardNum'); return; }
+    state.card = formatCard(raw);
+    document.getElementById('dispId').textContent = state.id;
+    document.getElementById('dispCard').textContent = state.card;
+    document.getElementById('dispAmount').textContent = toFa(state.balance) + ' تومان';
+    setProgress(3);
+    show('step3');
+  }
+  
+  function confirmWithdraw() {
+    setProgress(3);
+    show('stepLoading');
+    setTimeout(() => {
+      document.getElementById('finalAmount').textContent = toFa(state.balance);
+      document.getElementById('finalCard').textContent = state.card;
+      const now = new Date();
+      document.getElementById('finalTime').textContent =
+        now.toLocaleDateString('fa-IR') + ' -- ' +
+        now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+      show('step4');
+    }, 2200);
+  }
+  
+  // Auto-format card input
+  document.getElementById('cardNum').addEventListener('input', e => {
+    e.target.value = formatCard(e.target.value);
+  });
+  
+  // Shake animation for invalid input
+  function shakeInput(id) {
+    const el = document.getElementById(id);
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = 'shake 0.4s ease';
+    el.style.borderColor = '#ff4d6d';
+    setTimeout(() => {
+      el.style.borderColor = '';
+      el.style.animation = '';
+    }, 500);
+  }
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  renderBalance();
+</script>
+
+</body>
+</html>
